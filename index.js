@@ -1,22 +1,28 @@
-var express = require("express")
-const CovidCall = require("./covidApiCall")
-// var router = express.Router()
+const express = require("express");
+const bodyParser = require("body-parser");
+
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.get("/", (req,res)=>{
-    res.json({
-        success:true,
-    })
-})
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+var mainRoute = require("./covidRouter.js");
 
-app.get("/covid", (req,res)=>{
-    res.send("Covid api call")
-})
+app.use(mainRoute);
 
-app.listen(port, ()=>{
-    console.log(`server is listening at localhost:${port}`)
-    setInterval(()=>{
-        CovidCall.ApiCall()
-    }, 2000)
-})
+app.get("/", (req, res) => {
+  res.send({ msg: "Covid server on" });
+});
+
+app.use(handleError);
+
+function handleError(err, req, res, next) {
+  console.log("Error: ", err);
+  res.status(err.code).send({ msg: err.message });
+}
+
+var server = app.listen(port, () => {
+  console.log(`server is listening at localhost:${port}`);
+});
+
+server.timeout = 5000;
