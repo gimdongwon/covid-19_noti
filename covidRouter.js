@@ -20,7 +20,13 @@ function getCovidNums(req, res) {
   yesterDay.setTime(new Date().getTime() - 1 * 24 * 60 * 60 * 1000 * 5); // 몇일 전으로 돌리고 싶으면 * 일수를 해주면 됨.
   yesterDay = parse_string(yesterDay);
 
-  const date_parse = (date) => date.slice(0, 4) + "0" + date.slice(4, 8);
+  const date_parse = (date) => {
+    if (date.length === 6) {
+      return date.slice(0, 4) + "0" + date.slice(4, 5) + "0" + date.slice(6, 8);
+    } else {
+      return date.slice(0, 4) + "0" + date.slice(4, 8);
+    }
+  };
 
   today = today.length !== 8 ? date_parse(today) : today;
   yesterDay = yesterDay.length !== 8 ? date_parse(yesterDay) : yesterDay;
@@ -59,7 +65,7 @@ function getCovidNums(req, res) {
     },
     function (error, response, body) {
       try {
-        // console.log('Status', response.statusCode);
+        // console.log("Status", response.statusCode);
         // console.log('Headers', JSON.stringify(response.headers));
         // console.log('Reponse received');
 
@@ -71,7 +77,7 @@ function getCovidNums(req, res) {
         });
         let arr = JSON.parse(xmlToJson).response.body.items.item;
         // console.log(arr[0], "@@@@@@", arr[1], " @@@@ ", arr);
-
+        console.log(JSON.parse(xmlToJson).response.body.items);
         // // 여러 날의 확진자수가 궁금할 때. :: 2021-03-30 dongwon
         for (let i = 0; i < arr.length - 1; i++) {
           // console.log(arr[i].stateDt._text)
@@ -81,6 +87,9 @@ function getCovidNums(req, res) {
             arr[i].decideCnt._text - arr[i + 1].decideCnt._text
           );
         }
+        console.log(
+          new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
+        );
 
         // 당일 확진자 수만 궁금할 때 :: 2021-03-30 dongwon
         console.log(
