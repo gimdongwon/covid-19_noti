@@ -2,10 +2,11 @@ const express = require("express");
 const router = express.Router();
 const convert = require("xml-js");
 const request = require("request");
+const mailSender = require("./nodeMail");
 require("dotenv").config();
 
 router.get("/covid19", getCovidNums);
-router.post("/covid19", getCovidNums);
+// router.post("/covid19", mailSender);
 
 router.timeout = 5000;
 
@@ -58,7 +59,7 @@ function getCovidNums(req, res) {
     "=" +
     encodeURIComponent(today); /* */
   //   function ApiCall() {
-  request(
+  const ApiCall = request(
     {
       url: url + queryParams,
       method: "GET",
@@ -77,9 +78,9 @@ function getCovidNums(req, res) {
         });
         let arr = JSON.parse(xmlToJson).response.body.items.item;
         // console.log(arr[0], "@@@@@@", arr[1], " @@@@ ", arr);
-        console.log(JSON.parse(xmlToJson).response.body.items);
+
         // // 여러 날의 확진자수가 궁금할 때. :: 2021-03-30 dongwon
-        for (let i = 0; i < arr.length - 1; i++) {
+        for (let i = arr.length - 2; i > 0; i--) {
           // console.log(arr[i].stateDt._text)
           console.log(
             arr[i].stateDt._text,
@@ -93,6 +94,7 @@ function getCovidNums(req, res) {
 
         // 당일 확진자 수만 궁금할 때 :: 2021-03-30 dongwon
         console.log(
+          "오늘은",
           arr[0].stateDt._text,
           "일 확진자 : ",
           arr[0].decideCnt._text - arr[1].decideCnt._text
@@ -105,6 +107,15 @@ function getCovidNums(req, res) {
           },
         });
         console.log("-------------------");
+
+        // 메일 발송 :: 2021-07-30
+        // 반복 발송을 setInterval로 해결
+        setInterval(() => {
+          console.log(
+            new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
+          );
+          mailSender(arr[0].decideCnt._text - arr[1].decideCnt._text);
+        }, 1000 * 60 * 30); // 1초 1분 1시간 * 2
       } catch (error) {
         console.log(error);
       }
